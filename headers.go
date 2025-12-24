@@ -39,6 +39,8 @@ func GetToken() (string, error) {
 		filepath.Join(dir, "pywencai", "hexin-v.js"),
 		filepath.Join(dir, "hexin-v.js"),
 		filepath.Join(dir, "..", "pywencai", "hexin-v.js"),
+		filepath.Join(dir, "..", "..", "pywencai", "hexin-v.js"),
+		"/home/administrator/workplace/gowencai/pywencai/hexin-v.js", // 绝对路径
 	}
 
 	var scriptPath string
