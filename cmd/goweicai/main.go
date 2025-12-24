@@ -4,12 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	pb "github.com/iamloso/goweicai/api/proto"
 	"github.com/iamloso/goweicai/internal/biz"
 	"github.com/iamloso/goweicai/internal/conf"
 	"github.com/iamloso/goweicai/internal/data"
@@ -19,6 +21,7 @@ import (
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/robfig/cron/v3"
+	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 )
 
@@ -78,6 +81,28 @@ func main() {
 	// 初始化服务层
 	wencaiSvc := service.NewWencaiService(stockUc, bc.Wencai, logger)
 	httpSvc := service.NewHTTPService(stockUc, logger)
+	grpcSvc := service.NewGRPCService(stockUc, wencaiSvc, logger)
+
+	// 启动 gRPC 服务器
+	grpcAddr := ":9000"
+	if bc.Server != nil && bc.Server.Grpc != nil && bc.Server.Grpc.Addr != "" {
+		grpcAddr = bc.Server.Grpc.Addr
+	}
+
+	lis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		helper.Fatalf("gRPC 监听失败: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterStockServiceServer(grpcServer, grpcSvc)
+
+	go func() {
+		helper.Infof("gRPC 服务器启动在 %s", grpcAddr)
+		if err := grpcServer.Serve(lis); err != nil {
+			helper.Errorf("gRPC 服务器启动失败: %v", err)
+		}
+	}()
 
 	// 启动 HTTP 服务器
 	mux := http.NewServeMux()
@@ -147,6 +172,10 @@ func main() {
 	// 停止定时任务
 	c.Stop()
 	helper.Info("定时任务调度器已停止")
+	
+	// 优雅关闭 gRPC 服务器
+	grpcServer.GracefulStop()
+	helper.Info("gRPC 服务器已停止")
 	
 	// 优雅关闭 HTTP 服务器
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

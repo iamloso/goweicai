@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Kratos](https://img.shields.io/badge/Framework-Kratos%20v2.9-brightgreen)](https://go-kratos.dev/)
 [![Cron](https://img.shields.io/badge/Scheduler-Cron%20v3-orange)](https://github.com/robfig/cron)
+[![gRPC](https://img.shields.io/badge/gRPC-Protocol%20Buffers-blue)](https://grpc.io/)
 
 Go语言实现的同花顺问财数据获取工具，从 [pywencai](https://github.com/zsrl/pywencai) 移植而来。
 
@@ -13,6 +14,7 @@ Go语言实现的同花顺问财数据获取工具，从 [pywencai](https://gith
 
 - 🚀 基于 Kratos 微服务框架的 DDD 分层架构
 - ⏰ 支持 Cron 表达式的定时任务调度
+- 🌐 HTTP RESTful API + gRPC 双协议支持
 - 💾 MySQL 数据持久化存储
 - 🔧 YAML 配置文件，灵活易用
 - 📊 完整的股票数据字段支持
@@ -89,9 +91,11 @@ make daemon       # 后台运行（生产环境）
 ./goweicai.sh stop     # 停止服务
 ```
 
-### 3. 测试 HTTP API
+### 3. 测试 API 接口
 
-服务启动后，可以通过 HTTP API 查询股票数据：
+服务启动后，提供 HTTP 和 gRPC 两种协议访问：
+
+#### HTTP API (端口 8000)
 
 ```bash
 # 健康检查
@@ -106,7 +110,29 @@ curl -X POST http://localhost:8000/api/stocks/query \
   -d '{"code":"000001","page":1,"page_size":20}'
 ```
 
-📚 **完整 API 文档**: [API_DOCS.md](./API_DOCS.md)
+#### gRPC API (端口 9000)
+
+使用 grpcurl 测试（需先安装）：
+
+```bash
+# 安装 grpcurl
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
+# 列出服务
+grpcurl -plaintext localhost:9000 list
+
+# 获取最新股票
+grpcurl -plaintext -d '{"limit": 10}' \
+  localhost:9000 stock.v1.StockService/GetLatestStocks
+
+# 触发数据抓取
+grpcurl -plaintext -d '{}' \
+  localhost:9000 stock.v1.StockService/TriggerFetch
+```
+
+📚 **API 文档**：
+- HTTP API: [API_DOCS.md](./API_DOCS.md)
+- gRPC API: [GRPC_DOCS.md](./GRPC_DOCS.md)
 
 ### 4. 常用 Cron 表达式
 

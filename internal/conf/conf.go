@@ -11,9 +11,15 @@ type Bootstrap struct {
 // Server is the server configuration
 type Server struct {
 	Http *Server_HTTP `json:"http"`
+	Grpc *Server_GRPC `json:"grpc"`
 }
 
 type Server_HTTP struct {
+	Addr    string `json:"addr"`
+	Timeout string `json:"timeout"`
+}
+
+type Server_GRPC struct {
 	Addr    string `json:"addr"`
 	Timeout string `json:"timeout"`
 }

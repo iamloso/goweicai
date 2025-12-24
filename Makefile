@@ -50,3 +50,12 @@ fmt:
 # 代码检查
 lint:
 	golangci-lint run ./...
+
+# 生成 gRPC 代码
+proto:
+	./generate.sh
+
+# gRPC 测试（需要先安装 grpcurl）
+grpc-test:
+	@echo "测试 gRPC 服务..."
+	@grpcurl -plaintext localhost:9000 list || echo "请先安装 grpcurl: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest"

@@ -1,6 +1,8 @@
 module github.com/iamloso/goweicai
 
-go 1.23.1
+go 1.24.0
+
+toolchain go1.24.10
 
 require (
 	github.com/go-kratos/kratos/v2 v2.9.2
@@ -14,6 +16,11 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
+	google.golang.org/grpc v1.78.0 // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.0 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )

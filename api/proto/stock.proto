@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package stock.v1;
+
+option go_package = "github.com/iamloso/goweicai/api/proto/stock/v1;v1";
+
+// Stock 股票信息
+message Stock {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string date = 4;
+  double price = 5;
+  double change_percent = 6;
+  double turnover = 7;
+  double market_value = 8;
+  int32 board_days = 9;
+  string limit_reason = 10;
+  string highlights = 11;
+  string industry = 12;
+  string concepts = 13;
+  double pre_close = 14;
+  double open = 15;
+  double high = 16;
+  double low = 17;
+  double close = 18;
+  double volume = 19;
+  double bid_amount = 20;
+  double bid_unmatched = 21;
+  double bid_change = 22;
+  double seal_amount = 23;
+  string created_at = 24;
+  string updated_at = 25;
+}
+
+// QueryStocksRequest 查询股票请求
+message QueryStocksRequest {
+  string code = 1;
+  string start_date = 2;
+  string end_date = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+// QueryStocksResponse 查询股票响应
+message QueryStocksResponse {
+  int32 total = 1;
+  int32 page = 2;
+  int32 size = 3;
+  repeated Stock stocks = 4;
+}
+
+// GetLatestStocksRequest 获取最新股票请求
+message GetLatestStocksRequest {
+  int32 limit = 1;
+}
+
+// GetLatestStocksResponse 获取最新股票响应
+message GetLatestStocksResponse {
+  int32 total = 1;
+  repeated Stock stocks = 2;
+}
+
+// TriggerFetchRequest 触发抓取请求
+message TriggerFetchRequest {}
+
+// TriggerFetchResponse 触发抓取响应
+message TriggerFetchResponse {
+  bool success = 1;
+  string message = 2;
+  int32 fetched_count = 3;
+}
+
+// StockService 股票服务
+service StockService {
+  // QueryStocks 查询股票
+  rpc QueryStocks(QueryStocksRequest) returns (QueryStocksResponse);
+  
+  // GetLatestStocks 获取最新股票
+  rpc GetLatestStocks(GetLatestStocksRequest) returns (GetLatestStocksResponse);
+  
+  // TriggerFetch 手动触发数据抓取
+  rpc TriggerFetch(TriggerFetchRequest) returns (TriggerFetchResponse);
+}
