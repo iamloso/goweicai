@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/iamloso/goweicai/internal/biz"
 	"github.com/iamloso/goweicai/internal/conf"
@@ -14,6 +16,7 @@ import (
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,7 +39,7 @@ func main() {
 	helper := log.NewHelper(logger)
 
 	// 加载配置
-	c := config.New(
+	cfg := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
 		),
@@ -44,14 +47,14 @@ func main() {
 			return yaml.Unmarshal(kv.Value, v)
 		}),
 	)
-	defer c.Close()
+	defer cfg.Close()
 
-	if err := c.Load(); err != nil {
+	if err := cfg.Load(); err != nil {
 		panic(err)
 	}
 
 	var bc conf.Bootstrap
-	if err := c.Scan(&bc); err != nil {
+	if err := cfg.Scan(&bc); err != nil {
 		panic(err)
 	}
 
@@ -73,13 +76,49 @@ func main() {
 	// 初始化服务层
 	wencaiSvc := service.NewWencaiService(stockUc, bc.Wencai, logger)
 
-	// 执行任务
-	helper.Info("开始获取股票数据...")
+	// 创建定时任务
+	c := cron.New(cron.WithSeconds()) // 支持秒级别的 cron 表达式
 	ctx := context.Background()
-	if err := wencaiSvc.FetchAndSaveStocks(ctx); err != nil {
-		helper.Errorf("failed to fetch and save stocks: %v", err)
-		os.Exit(1)
+
+	// 定义任务函数
+	job := func() {
+		helper.Info("开始执行定时任务...")
+		if err := wencaiSvc.FetchAndSaveStocks(ctx); err != nil {
+			helper.Errorf("定时任务执行失败: %v", err)
+		} else {
+			helper.Info("定时任务执行成功")
+		}
 	}
 
-	helper.Info("任务完成")
+	// 添加定时任务
+	cronExpr := bc.Scheduler.Cron
+	if cronExpr == "" {
+		cronExpr = "0 0 9 * * *" // 默认每天 9:00
+	}
+	
+	_, err = c.AddFunc(cronExpr, job)
+	if err != nil {
+		helper.Fatalf("添加定时任务失败: %v", err)
+	}
+
+	helper.Infof("定时任务已配置，Cron 表达式: %s", cronExpr)
+
+	// 如果配置了启动时立即执行
+	if bc.Scheduler.RunOnStart {
+		helper.Info("启动时立即执行一次任务...")
+		job()
+	}
+
+	// 启动定时任务
+	c.Start()
+	helper.Info("定时任务调度器已启动")
+
+	// 等待退出信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	helper.Info("收到退出信号，正在关闭...")
+	c.Stop()
+	helper.Info("定时任务调度器已停止")
 }

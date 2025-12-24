@@ -2,9 +2,10 @@ package conf
 
 // Bootstrap is the configuration structure
 type Bootstrap struct {
-	Server *Server `json:"server"`
-	Data   *Data   `json:"data"`
-	Wencai *Wencai `json:"wencai"`
+	Server    *Server    `json:"server"`
+	Scheduler *Scheduler `json:"scheduler"`
+	Data      *Data      `json:"data"`
+	Wencai    *Wencai    `json:"wencai"`
 }
 
 // Server is the server configuration
@@ -15,6 +16,12 @@ type Server struct {
 type Server_HTTP struct {
 	Addr    string `json:"addr"`
 	Timeout string `json:"timeout"`
+}
+
+// Scheduler is the scheduler configuration
+type Scheduler struct {
+	Cron       string `json:"cron"`
+	RunOnStart bool   `json:"run_on_start"`
 }
 
 // Data is the data layer configuration

@@ -2,10 +2,21 @@
 
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-blue)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Kratos](https://img.shields.io/badge/Framework-Kratos%20v2.9-brightgreen)](https://go-kratos.dev/)
+[![Cron](https://img.shields.io/badge/Scheduler-Cron%20v3-orange)](https://github.com/robfig/cron)
 
 Go语言实现的同花顺问财数据获取工具，从 [pywencai](https://github.com/zsrl/pywencai) 移植而来。
 
 ⚠️ **注意**：由于问财登录策略调整，目前**必须提供cookie参数**才能使用。
+
+## ✨ 特性
+
+- 🚀 基于 Kratos 微服务框架的 DDD 分层架构
+- ⏰ 支持 Cron 表达式的定时任务调度
+- 💾 MySQL 数据持久化存储
+- 🔧 YAML 配置文件，灵活易用
+- 📊 完整的股票数据字段支持
+- 🛡️ 优雅退出和错误处理
 
 ## 声明
 
@@ -39,13 +50,71 @@ brew install node
 
 详细说明请参考 [NODEJS_REQUIRED.md](./NODEJS_REQUIRED.md)
 
-## 安装
+## 🚀 快速开始（定时任务模式）
 
-```bash
-go get github.com/fenghuang/gowencai
+### 1. 配置文件
+
+编辑 `configs/config.yaml`：
+
+```yaml
+scheduler:
+  # Cron 表达式：每天 9:00 执行
+  cron: "0 0 9 * * *"
+  # 启动时立即执行一次
+  run_on_start: true
+
+data:
+  database:
+    driver: mysql
+    source: root:password@tcp(localhost:3306)/wc?charset=utf8mb4&parseTime=True&loc=Local
+
+wencai:
+  query: "竞价未匹配金额；竞价金额；竞价涨幅；涨幅；成交金额；流通市值；连板天数；不含ST"
+  cookie: "your_cookie_here"  # 必填
 ```
 
-## 快速开始
+### 2. 编译并运行
+
+```bash
+# 使用 Makefile
+make build
+make run          # 前台运行（开发测试）
+make daemon       # 后台运行（生产环境）
+
+# 或使用管理脚本
+./goweicai.sh build
+./goweicai.sh start    # 启动服务
+./goweicai.sh status   # 查看状态
+./goweicai.sh logs -f  # 实时查看日志
+./goweicai.sh stop     # 停止服务
+```
+
+### 3. 常用 Cron 表达式
+
+| 需求 | Cron 表达式 |
+|------|-------------|
+| 每天 9:00 | `0 0 9 * * *` |
+| 每 30 分钟 | `0 */30 * * * *` |
+| 每天 9:00 和 15:00 | `0 0 9,15 * * *` |
+| 工作日 9:00 | `0 0 9 * * 1-5` |
+| 每 5 秒（测试） | `*/5 * * * * *` |
+
+📚 **详细文档**：
+- [定时任务使用指南](./SCHEDULER_GUIDE.md)
+- [定时任务改造总结](./SCHEDULER_REFACTOR.md)
+- [Kratos 框架说明](./README_KRATOS.md)
+
+---
+
+## 💡 库模式使用（编程调用）
+
+### 安装
+
+```bash
+go get github.com/iamloso/goweicai
+```
+
+### 示例代码
 
 ```go
 package main
