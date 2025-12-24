@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/iamloso/goweicai/internal/biz"
 	"github.com/iamloso/goweicai/internal/conf"
@@ -75,6 +77,28 @@ func main() {
 
 	// 初始化服务层
 	wencaiSvc := service.NewWencaiService(stockUc, bc.Wencai, logger)
+	httpSvc := service.NewHTTPService(stockUc, logger)
+
+	// 启动 HTTP 服务器
+	mux := http.NewServeMux()
+	httpSvc.RegisterRoutes(mux)
+	
+	httpAddr := ":8000"
+	if bc.Server != nil && bc.Server.Http != nil && bc.Server.Http.Addr != "" {
+		httpAddr = bc.Server.Http.Addr
+	}
+	
+	httpServer := &http.Server{
+		Addr:    httpAddr,
+		Handler: mux,
+	}
+	
+	go func() {
+		helper.Infof("HTTP 服务器启动在 %s", httpAddr)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			helper.Errorf("HTTP 服务器启动失败: %v", err)
+		}
+	}()
 
 	// 创建定时任务
 	c := cron.New(cron.WithSeconds()) // 支持秒级别的 cron 表达式
@@ -119,6 +143,17 @@ func main() {
 	<-quit
 
 	helper.Info("收到退出信号，正在关闭...")
+	
+	// 停止定时任务
 	c.Stop()
 	helper.Info("定时任务调度器已停止")
+	
+	// 优雅关闭 HTTP 服务器
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(ctx); err != nil {
+		helper.Errorf("HTTP 服务器关闭失败: %v", err)
+	} else {
+		helper.Info("HTTP 服务器已停止")
+	}
 }

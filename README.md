@@ -89,7 +89,26 @@ make daemon       # 后台运行（生产环境）
 ./goweicai.sh stop     # 停止服务
 ```
 
-### 3. 常用 Cron 表达式
+### 3. 测试 HTTP API
+
+服务启动后，可以通过 HTTP API 查询股票数据：
+
+```bash
+# 健康检查
+curl http://localhost:8000/health
+
+# 获取最新股票数据
+curl "http://localhost:8000/api/stocks/latest?limit=10"
+
+# 查询特定股票
+curl -X POST http://localhost:8000/api/stocks/query \
+  -H "Content-Type: application/json" \
+  -d '{"code":"000001","page":1,"page_size":20}'
+```
+
+📚 **完整 API 文档**: [API_DOCS.md](./API_DOCS.md)
+
+### 4. 常用 Cron 表达式
 
 | 需求 | Cron 表达式 |
 |------|-------------|
