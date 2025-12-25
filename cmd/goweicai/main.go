@@ -59,7 +59,7 @@ func main() {
 	helper.Info("配置加载成功")
 
 	// 初始化数据层
-	d, cleanup, err := data.NewData(bc.Data, logger)
+	d, cleanup, err := data.NewData(bc.Data, &bc, logger)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create data: %v", err))
 	}

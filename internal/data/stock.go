@@ -14,6 +14,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 // Data 数据访问层
@@ -24,7 +25,7 @@ type Data struct {
 }
 
 // NewData 创建数据访问层
-func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
+func NewData(c *conf.Data, bc *conf.Bootstrap, logger log.Logger) (*Data, func(), error) {
 	helper := log.NewHelper(log.With(logger, "module", "data"))
 	
 	// 原生 SQL DB（用于 stock）
@@ -37,8 +38,18 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		return nil, nil, err
 	}
 	
+	// GORM 配置
+	gormConfig := &gorm.Config{}
+	
+	// 根据全局 debug 配置决定是否打印 SQL
+	if bc.Debug {
+		gormConfig.Logger = gormlogger.Default.LogMode(gormlogger.Info)
+	} else {
+		gormConfig.Logger = gormlogger.Default.LogMode(gormlogger.Silent)
+	}
+	
 	// GORM DB（用于 baseinfo）
-	gormDB, err := gorm.Open(mysql.Open(c.Database.Source), &gorm.Config{})
+	gormDB, err := gorm.Open(mysql.Open(c.Database.Source), gormConfig)
 	if err != nil {
 		return nil, nil, err
 	}

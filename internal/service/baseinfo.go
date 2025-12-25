@@ -39,12 +39,19 @@ func (s *BaseInfoService) FetchAndSaveBaseInfo(ctx context.Context) error {
 		Log:    true,
 		Loop:   true,
 	})
-	// 根据配置决定是否打印调试信息
-	if s.bootstrap.Debug {
-		s.log.Infof("查询结果: %v", result)
-	}
 	if err != nil {
 		return fmt.Errorf("查询失败: %w", err)
+	}
+
+	// 根据配置决定是否打印调试信息（控制输出长度）
+	if s.bootstrap.Debug {
+		resultStr := fmt.Sprintf("%v", result)
+		maxLen := 500 // 最多显示 500 字符
+		if len(resultStr) > maxLen {
+			s.log.Infof("查询结果（截断）: %s... [总长度: %d]", resultStr[:maxLen], len(resultStr))
+		} else {
+			s.log.Infof("查询结果: %s", resultStr)
+		}
 	}
 
 	infos, err := s.parseResult(result)
