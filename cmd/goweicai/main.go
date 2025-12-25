@@ -75,7 +75,7 @@ func main() {
 
 	// 初始化服务层
 	wencaiSvc := service.NewWencaiService(stockUc, bc.Wencai, logger)
-	baseInfoSvc := service.NewBaseInfoService(baseInfoUc, bc.BaseInfo, logger)
+	baseInfoSvc := service.NewBaseInfoService(baseInfoUc, bc.BaseInfo, &bc, logger)
 	httpSvc := service.NewHTTPService(stockUc, logger)
 	grpcSvc := service.NewGRPCService(stockUc, wencaiSvc, logger)
 

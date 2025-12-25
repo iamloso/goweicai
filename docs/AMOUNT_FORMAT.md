@@ -7,6 +7,7 @@
 - `auction_unmatched_amount_str`: 竞价未匹配金额
 - `morning_auction_amount_str`: 早盘竞价金额
 - `turnover_str`: 成交额
+- `circulation_market_value_str`: 流通市值
 
 ## 存储格式
 

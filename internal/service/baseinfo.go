@@ -13,17 +13,19 @@ import (
 
 // BaseInfoService 基础数据服务
 type BaseInfoService struct {
-	uc     *biz.BaseInfoUsecase
-	config *conf.BaseInfo
-	log    *log.Helper
+	uc        *biz.BaseInfoUsecase
+	config    *conf.BaseInfo
+	bootstrap *conf.Bootstrap
+	log       *log.Helper
 }
 
 // NewBaseInfoService 创建基础数据服务
-func NewBaseInfoService(uc *biz.BaseInfoUsecase, c *conf.BaseInfo, logger log.Logger) *BaseInfoService {
+func NewBaseInfoService(uc *biz.BaseInfoUsecase, c *conf.BaseInfo, bc *conf.Bootstrap, logger log.Logger) *BaseInfoService {
 	return &BaseInfoService{
-		uc:     uc,
-		config: c,
-		log:    log.NewHelper(log.With(logger, "module", "service/baseinfo")),
+		uc:        uc,
+		config:    c,
+		bootstrap: bc,
+		log:       log.NewHelper(log.With(logger, "module", "service/baseinfo")),
 	}
 }
 
@@ -35,9 +37,12 @@ func (s *BaseInfoService) FetchAndSaveBaseInfo(ctx context.Context) error {
 		Query:  s.config.Query,
 		Cookie: s.config.Cookie,
 		Log:    true,
-		Loop:   false,
+		Loop:   true,
 	})
-	s.log.Infof("查询结果: %v", result)
+	// 根据配置决定是否打印调试信息
+	if s.bootstrap.Debug {
+		s.log.Infof("查询结果: %v", result)
+	}
 	if err != nil {
 		return fmt.Errorf("查询失败: %w", err)
 	}
@@ -99,6 +104,7 @@ func (s *BaseInfoService) parseResult(result interface{}) ([]*biz.BaseInfo, erro
 			MorningAuctionAmountStr:   formatAmountStr(item, fmt.Sprintf("竞价金额[%s]", tradeDateKey)),
 			TurnoverStr:               formatAmountStr(item, fmt.Sprintf("成交额[%s]", tradeDateKey)),
 			CirculationMarketValue:    getFloatValue(item, fmt.Sprintf("a股市值(不含限售股)[%s]", tradeDateKey)),
+			CirculationMarketValueStr: formatAmountStr(item, fmt.Sprintf("a股市值(不含限售股)[%s]", tradeDateKey)),
 			StockCode:                 getStringValue(item, "股票代码"),
 			TradeDate:                 tradeDate,
 			MarketCode:                getStringValue(item, "market_code"),

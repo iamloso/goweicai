@@ -34,6 +34,7 @@ type BaseInfoModel struct {
 	MorningAuctionAmountStr   string    `gorm:"column:morning_auction_amount_str;type:varchar(50);comment:竞价金额（如：12万、1.3亿）"`
 	TurnoverStr               string    `gorm:"column:turnover_str;type:varchar(50);comment:成交额（如：12万、1.3亿）"`
 	CirculationMarketValue    float64   `gorm:"column:circulation_market_value;type:decimal(20,2)"`
+	CirculationMarketValueStr string    `gorm:"column:circulation_market_value_str;type:varchar(50);comment:流通市值（如：12万、1.3亿）"`
 	StockCode                 string    `gorm:"column:stock_code;type:varchar(20);index:idx_stock_date"`
 	TradeDate                 time.Time `gorm:"column:trade_date;type:date;index:idx_stock_date"`
 	MarketCode                string    `gorm:"column:market_code;type:varchar(10)"`
@@ -111,7 +112,7 @@ func (r *baseInfoRepo) BatchSave(ctx context.Context, infos []*biz.BaseInfo) err
 			DoUpdates: clause.AssignmentColumns([]string{
 				"stock_name", "latest_price", "auction_change_rate", "latest_change_rate",
 				"auction_unmatched_amount_str", "morning_auction_amount_str", "turnover_str",
-				"circulation_market_value", "stock_code", "market_code", "turnover",
+				"circulation_market_value", "circulation_market_value_str", "stock_code", "market_code", "turnover",
 				"morning_auction_amount", "auction_unmatched_amount", "company_highlights",
 				"industry_category", "concept_theme", "consecutive_limit_days", "update_time",
 			}), // 冲突时更新的字段
@@ -139,6 +140,7 @@ func (r *baseInfoRepo) toModel(info *biz.BaseInfo) *BaseInfoModel {
 		MorningAuctionAmountStr:   info.MorningAuctionAmountStr,
 		TurnoverStr:               info.TurnoverStr,
 		CirculationMarketValue:    info.CirculationMarketValue,
+		CirculationMarketValueStr: info.CirculationMarketValueStr,
 		StockCode:                 info.StockCode,
 		TradeDate:                 info.TradeDate,
 		MarketCode:                info.MarketCode,
@@ -167,6 +169,7 @@ func (r *baseInfoRepo) toBiz(model *BaseInfoModel) *biz.BaseInfo {
 		MorningAuctionAmountStr:   model.MorningAuctionAmountStr,
 		TurnoverStr:               model.TurnoverStr,
 		CirculationMarketValue:    model.CirculationMarketValue,
+		CirculationMarketValueStr: model.CirculationMarketValueStr,
 		StockCode:                 model.StockCode,
 		TradeDate:                 model.TradeDate,
 		MarketCode:                model.MarketCode,

@@ -9,6 +9,7 @@ CREATE TABLE `base_info` (
     `morning_auction_amount_str` varchar(50) DEFAULT NULL COMMENT '早盘竞价金额（如：12万、1.3亿）',
     `turnover_str` varchar(50) DEFAULT NULL COMMENT '成交额（如：12万、1.3亿）',
     `circulation_market_value` decimal(20, 2) DEFAULT NULL COMMENT '流通市值',
+    `circulation_market_value_str` varchar(50) DEFAULT NULL COMMENT '流通市值（如：12万、1.3亿）',
     `stock_code` varchar(20) NOT NULL COMMENT '股票代码（含后缀）',
     `trade_date` date NOT NULL COMMENT '交易日期',
     `market_code` varchar(10) DEFAULT NULL COMMENT '市场代码',

@@ -16,6 +16,7 @@ type BaseInfo struct {
 	MorningAuctionAmountStr   string    `json:"morning_auction_amount_str"`   // 带单位字符串，如：12万、1.3亿
 	TurnoverStr               string    `json:"turnover_str"`                 // 带单位字符串，如：12万、1.3亿
 	CirculationMarketValue    float64   `json:"circulation_market_value"`
+	CirculationMarketValueStr string    `json:"circulation_market_value_str"` // 流通市值带单位字符串，如：12万、1.3亿
 	StockCode                 string    `json:"stock_code"`
 	TradeDate                 time.Time `json:"trade_date"`
 	MarketCode                string    `json:"market_code"`

@@ -3,6 +3,7 @@ package conf
 // Bootstrap is the configuration structure
 type Bootstrap struct {
 	Server    *Server    `json:"server"`
+	Debug     bool       `json:"debug"`      // 全局调试开关
 	Scheduler *Scheduler `json:"scheduler"`
 	Data      *Data      `json:"data"`
 	Wencai    *Wencai    `json:"wencai"`
