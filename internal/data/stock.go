@@ -12,18 +12,22 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-kratos/kratos/v2/log"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // Data 数据访问层
 type Data struct {
-	db  *sql.DB
-	log *log.Helper
+	db     *sql.DB
+	gormDB *gorm.DB
+	log    *log.Helper
 }
 
 // NewData 创建数据访问层
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	helper := log.NewHelper(log.With(logger, "module", "data"))
 	
+	// 原生 SQL DB（用于 stock）
 	db, err := sql.Open(c.Database.Driver, c.Database.Source)
 	if err != nil {
 		return nil, nil, err
@@ -33,14 +37,24 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		return nil, nil, err
 	}
 	
+	// GORM DB（用于 baseinfo）
+	gormDB, err := gorm.Open(mysql.Open(c.Database.Source), &gorm.Config{})
+	if err != nil {
+		return nil, nil, err
+	}
+	
 	helper.Info("database connected successfully")
 	
 	cleanup := func() {
 		helper.Info("closing database connection")
 		db.Close()
+		sqlDB, _ := gormDB.DB()
+		if sqlDB != nil {
+			sqlDB.Close()
+		}
 	}
 	
-	return &Data{db: db, log: helper}, cleanup, nil
+	return &Data{db: db, gormDB: gormDB, log: helper}, cleanup, nil
 }
 
 // stockRepo 股票数据仓库实现

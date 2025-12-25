@@ -1,4 +1,4 @@
-CREATE TABLE `zp_jj` (
+CREATE TABLE `base_info` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     `stock_name` varchar(100) NOT NULL COMMENT '股票简称',
     `latest_price` decimal(10, 2) DEFAULT NULL COMMENT '最新价',
@@ -26,4 +26,4 @@ CREATE TABLE `zp_jj` (
     KEY `idx_code` (`code`),
     KEY `idx_stock_code` (`stock_code`),
     KEY `idx_trade_date` (`trade_date`)
-) ENGINE = InnoDB AUTO_INCREMENT = 5424 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '基础数据表'
+) ENGINE = InnoDB AUTO_INCREMENT = 0 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '基础数据表'

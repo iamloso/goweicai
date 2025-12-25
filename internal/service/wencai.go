@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	gowencai "github.com/iamloso/goweicai"
@@ -172,58 +171,4 @@ func (s *WencaiService) parseResult(result interface{}) ([]*biz.Stock, error) {
 	}
 
 	return stocks, nil
-}
-
-// 辅助函数
-func getStringValue(m map[string]interface{}, key string) string {
-	if v, ok := m[key]; ok && v != nil {
-		return fmt.Sprintf("%v", v)
-	}
-	return ""
-}
-
-func getFloatValue(m map[string]interface{}, key string) float64 {
-	if v, ok := m[key]; ok && v != nil {
-		switch val := v.(type) {
-		case float64:
-			return val
-		case float32:
-			return float64(val)
-		case int:
-			return float64(val)
-		case int64:
-			return float64(val)
-		case string:
-			var f float64
-			fmt.Sscanf(val, "%f", &f)
-			return f
-		}
-	}
-	return 0
-}
-
-func getIntValue(m map[string]interface{}, key string) int64 {
-	if v, ok := m[key]; ok && v != nil {
-		switch val := v.(type) {
-		case int64:
-			return val
-		case int:
-			return int64(val)
-		case float64:
-			return int64(val)
-		case float32:
-			return int64(val)
-		case string:
-			// 处理科学计数法
-			var f float64
-			if strings.Contains(val, "E") || strings.Contains(val, "e") {
-				fmt.Sscanf(val, "%e", &f)
-				return int64(f)
-			}
-			var i int64
-			fmt.Sscanf(val, "%d", &i)
-			return i
-		}
-	}
-	return 0
 }

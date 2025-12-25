@@ -6,6 +6,7 @@ type Bootstrap struct {
 	Scheduler *Scheduler `json:"scheduler"`
 	Data      *Data      `json:"data"`
 	Wencai    *Wencai    `json:"wencai"`
+	BaseInfo  *BaseInfo  `json:"baseinfo"`
 }
 
 // Server is the server configuration
@@ -26,8 +27,15 @@ type Server_GRPC struct {
 
 // Scheduler is the scheduler configuration
 type Scheduler struct {
-	Cron       string `json:"cron"`
-	RunOnStart bool   `json:"run_on_start"`
+	Stock      *SchedulerTask `json:"stock"`       // 股票涨停数据任务
+	BaseInfo   *SchedulerTask `json:"base_info"`   // 基础数据任务
+	RunOnStart bool           `json:"run_on_start"` // 启动时立即执行
+}
+
+// SchedulerTask 单个定时任务配置
+type SchedulerTask struct {
+	Enabled bool   `json:"enabled"` // 是否启用
+	Cron    string `json:"cron"`    // Cron 表达式
 }
 
 // Data is the data layer configuration
@@ -42,6 +50,12 @@ type Data_Database struct {
 
 // Wencai is the wencai API configuration
 type Wencai struct {
+	Query  string `json:"query"`
+	Cookie string `json:"cookie"`
+}
+
+// BaseInfo is the base info API configuration
+type BaseInfo struct {
 	Query  string `json:"query"`
 	Cookie string `json:"cookie"`
 }
