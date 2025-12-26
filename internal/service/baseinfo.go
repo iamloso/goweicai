@@ -61,11 +61,18 @@ func (s *BaseInfoService) FetchAndSaveBaseInfo(ctx context.Context) error {
 
 	s.log.Infof("查询到 %d 条基础数据", len(infos))
 
+	// 保存到 base_info 表（原逻辑不变，只根据 code 更新）
 	if err := s.uc.SaveBaseInfos(ctx, infos); err != nil {
 		return fmt.Errorf("保存数据失败: %w", err)
 	}
+	s.log.Info("base_info 表数据保存成功")
 
-	s.log.Info("基础数据保存成功")
+	// 保存到 base_info_day 表（根据 code 和 trade_date 更新）
+	if err := s.uc.SaveBaseInfosDay(ctx, infos); err != nil {
+		return fmt.Errorf("保存每日数据失败: %w", err)
+	}
+	s.log.Info("base_info_day 表数据保存成功")
+
 	return nil
 }
 

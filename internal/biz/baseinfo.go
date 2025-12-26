@@ -42,6 +42,8 @@ type BaseInfoRepo interface {
 	FindByCode(ctx context.Context, code string) (*BaseInfo, error)
 	// BatchSave 批量保存
 	BatchSave(ctx context.Context, infos []*BaseInfo) error
+	// BatchSaveDay 批量保存每日数据
+	BatchSaveDay(ctx context.Context, infos []*BaseInfo) error
 }
 
 // BaseInfoUsecase 基础数据用例
@@ -59,4 +61,9 @@ func NewBaseInfoUsecase(repo BaseInfoRepo) *BaseInfoUsecase {
 // SaveBaseInfos 保存基础数据
 func (uc *BaseInfoUsecase) SaveBaseInfos(ctx context.Context, infos []*BaseInfo) error {
 	return uc.repo.BatchSave(ctx, infos)
+}
+
+// SaveBaseInfosDay 保存每日基础数据
+func (uc *BaseInfoUsecase) SaveBaseInfosDay(ctx context.Context, infos []*BaseInfo) error {
+	return uc.repo.BatchSaveDay(ctx, infos)
 }

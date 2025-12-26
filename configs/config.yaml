@@ -7,7 +7,7 @@ server:
     timeout: 60s
 
 # 全局调试开关
-debug: false  # 是否打印查询结果调试信息
+debug: true  # 是否打印查询结果调试信息
 
 scheduler:
   # 股票涨停数据定时任务
