@@ -78,7 +78,7 @@ func (s *CronScheduler) Start() error {
 	if s.config.Stock != nil && s.config.Stock.Enabled {
 		cronExpr := s.config.Stock.Cron
 		if cronExpr == "" {
-			cronExpr = "0 0 9 * * *" // 默认每天 9:00
+			cronExpr = "0 */5 9-16 * * 1-5" // 默认交易日 9:16-15:16 每5分钟
 		}
 
 		if _, err := s.cron.AddFunc(cronExpr, stockJob); err != nil {
@@ -94,7 +94,7 @@ func (s *CronScheduler) Start() error {
 	if s.config.BaseInfo != nil && s.config.BaseInfo.Enabled {
 		cronExpr := s.config.BaseInfo.Cron
 		if cronExpr == "" {
-			cronExpr = "0 15 9 * * *" // 默认每天 9:15
+			cronExpr = "0 */5 9-16 * * 1-5" // 默认交易日 9:16-15:16 每5分钟
 		}
 
 		if _, err := s.cron.AddFunc(cronExpr, baseInfoJob); err != nil {
@@ -110,7 +110,7 @@ func (s *CronScheduler) Start() error {
 	if s.config.ZtInfo != nil && s.config.ZtInfo.Enabled {
 		cronExpr := s.config.ZtInfo.Cron
 		if cronExpr == "" {
-			cronExpr = "0 */1 * * * *" // 默认每分钟执行一次（秒 分 时 日 月 周）
+			cronExpr = "0 */1 9-16 * * 1-5" // 默认交易日 9:16-15:16 每分钟
 		}
 
 		if _, err := s.cron.AddFunc(cronExpr, ztInfoJob); err != nil {

@@ -137,14 +137,14 @@ func (s *ZtInfoService) parseResult(result interface{}) ([]*biz.ZtInfo, error) {
 		// 优先取涨停封单额，如果没有则取跌停封单额
 		limitUpSealKey := fmt.Sprintf("涨停封单额[%s]", tradeDateKey)
 		limitDownSealKey := fmt.Sprintf("跌停封单额[%s]", tradeDateKey)
-		
+
 		sealAmount := getFloatValue(item, limitUpSealKey)
 		sealAmountStr := formatAmountStr(item, limitUpSealKey)
 		if sealAmount == 0 {
 			sealAmount = getFloatValue(item, limitDownSealKey)
 			sealAmountStr = formatAmountStr(item, limitDownSealKey)
 		}
-		
+
 		info.LimitUpSealAmount = int64(sealAmount)
 		info.LimitUpSealAmountStr = sealAmountStr
 
