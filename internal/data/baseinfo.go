@@ -122,78 +122,46 @@ func (r *baseInfoRepo) FindByCode(ctx context.Context, code string) (*biz.BaseIn
 	return r.toBiz(&model), nil
 }
 
-// BatchSave 批量保存（使用 GORM upsert）
+// BatchSave 批量保存（先删除所有数据，再批量插入新数据）
 func (r *baseInfoRepo) BatchSave(ctx context.Context, infos []*biz.BaseInfo) error {
 	if len(infos) == 0 {
 		return nil
 	}
 
-	// 先根据 code 进行查找，有就更新，没有就插入
-	var toCreate []*BaseInfoModel
-	var toUpdate []*BaseInfoModel
-	
-	// 收集所有的 code
-	codes := make([]string, 0, len(infos))
-	codeToInfo := make(map[string]*biz.BaseInfo)
-	for _, info := range infos {
-		codes = append(codes, info.Code)
-		codeToInfo[info.Code] = info
+	// 开启事务
+	tx := r.data.gormDB.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		r.log.Errorf("BatchSave begin transaction error: %v", tx.Error)
+		return tx.Error
 	}
-	
-	// 批量查询已存在的记录
-	var existingModels []*BaseInfoModel
-	err := r.data.gormDB.WithContext(ctx).
-		Where("code IN ?", codes).
-		Find(&existingModels).Error
-	
-	if err != nil {
-		r.log.Errorf("BatchSave query error: %v", err)
+
+	// 先删除所有数据
+	if err := tx.Exec("DELETE FROM base_info").Error; err != nil {
+		tx.Rollback()
+		r.log.Errorf("BatchSave delete all records error: %v", err)
 		return err
 	}
-	
-	// 建立已存在记录的映射
-	existingMap := make(map[string]*BaseInfoModel)
-	for _, model := range existingModels {
-		existingMap[model.Code] = model
-	}
-	
-	// 分类处理：更新 vs 插入
+	r.log.Info("BatchSave deleted all existing records")
+
+	// 批量插入新数据
+	models := make([]*BaseInfoModel, 0, len(infos))
 	for _, info := range infos {
-		model := r.toModel(info)
-		if existing, ok := existingMap[info.Code]; ok {
-			// 已存在，准备更新（保留原ID）
-			model.ID = existing.ID
-			toUpdate = append(toUpdate, model)
-		} else {
-			// 不存在，准备插入
-			toCreate = append(toCreate, model)
-		}
+		models = append(models, r.toModel(info))
 	}
-	
-	// 批量插入新记录
-	if len(toCreate) > 0 {
-		if err := r.data.gormDB.WithContext(ctx).CreateInBatches(toCreate, 100).Error; err != nil {
-			r.log.Errorf("BatchSave create error: %v", err)
-			return err
-		}
-		r.log.Infof("BatchSave created %d new records", len(toCreate))
+
+	if err := tx.CreateInBatches(models, 100).Error; err != nil {
+		tx.Rollback()
+		r.log.Errorf("BatchSave create error: %v", err)
+		return err
 	}
-	
-	// 批量更新已存在的记录
-	if len(toUpdate) > 0 {
-		for _, model := range toUpdate {
-			if err := r.data.gormDB.WithContext(ctx).
-				Model(&BaseInfoModel{}).
-				Where("id = ?", model.ID).
-				Updates(model).Error; err != nil {
-				r.log.Errorf("BatchSave update error for code %s: %v", model.Code, err)
-				return err
-			}
-		}
-		r.log.Infof("BatchSave updated %d existing records", len(toUpdate))
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		r.log.Errorf("BatchSave commit transaction error: %v", err)
+		return err
 	}
-	
-	r.log.Infof("BatchSave success, total: %d (created: %d, updated: %d)", len(infos), len(toCreate), len(toUpdate))
+
+	r.log.Infof("BatchSave success, total: %d records inserted", len(infos))
 	return nil
 }
 
@@ -298,17 +266,19 @@ func (r *baseInfoRepo) BatchSaveDay(ctx context.Context, infos []*biz.BaseInfo) 
 	// 收集所有的 code 和 trade_date 组合
 	type CodeDateKey struct {
 		Code      string
-		TradeDate time.Time
+		TradeDate string // 使用字符串格式 YYYY-MM-DD
 	}
 	codeToInfo := make(map[CodeDateKey]*biz.BaseInfo)
 	var conditions []map[string]interface{}
-	
+
 	for _, info := range infos {
-		key := CodeDateKey{Code: info.Code, TradeDate: info.TradeDate}
+		// 只保留日期部分，去掉时分秒
+		dateOnly := info.TradeDate.Format("2006-01-02")
+		key := CodeDateKey{Code: info.Code, TradeDate: dateOnly}
 		codeToInfo[key] = info
 		conditions = append(conditions, map[string]interface{}{
 			"code":       info.Code,
-			"trade_date": info.TradeDate,
+			"trade_date": dateOnly,
 		})
 	}
 
@@ -333,15 +303,19 @@ func (r *baseInfoRepo) BatchSaveDay(ctx context.Context, infos []*biz.BaseInfo) 
 	// 建立已存在记录的映射
 	existingMap := make(map[CodeDateKey]*BaseInfoDayModel)
 	for _, model := range existingModels {
-		key := CodeDateKey{Code: model.Code, TradeDate: model.TradeDate}
+		// 只保留日期部分
+		dateOnly := model.TradeDate.Format("2006-01-02")
+		key := CodeDateKey{Code: model.Code, TradeDate: dateOnly}
 		existingMap[key] = model
 	}
 
 	// 分类处理：更新 vs 插入
 	for _, info := range infos {
 		model := r.toDayModel(info)
-		key := CodeDateKey{Code: info.Code, TradeDate: info.TradeDate}
-		
+		// 只保留日期部分
+		dateOnly := info.TradeDate.Format("2006-01-02")
+		key := CodeDateKey{Code: info.Code, TradeDate: dateOnly}
+
 		if existing, ok := existingMap[key]; ok {
 			// 已存在，准备更新（保留原ID）
 			model.ID = existing.ID
@@ -368,7 +342,7 @@ func (r *baseInfoRepo) BatchSaveDay(ctx context.Context, infos []*biz.BaseInfo) 
 				Model(&BaseInfoDayModel{}).
 				Where("id = ?", model.ID).
 				Updates(model).Error; err != nil {
-				r.log.Errorf("BatchSaveDay update error for code %s date %s: %v", 
+				r.log.Errorf("BatchSaveDay update error for code %s date %s: %v",
 					model.Code, model.TradeDate.Format("2006-01-02"), err)
 				return err
 			}
