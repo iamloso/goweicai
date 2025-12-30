@@ -16,6 +16,7 @@
             ],
             "cwd": "${workspaceFolder}",
             "env": {},
+            "console": "integratedTerminal",
             "showLog": true,
             "trace": "verbose"
         },

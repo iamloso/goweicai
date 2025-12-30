@@ -3,11 +3,12 @@ package conf
 // Bootstrap is the configuration structure
 type Bootstrap struct {
 	Server    *Server    `json:"server"`
-	Debug     bool       `json:"debug"`      // 全局调试开关
+	Debug     bool       `json:"debug"` // 全局调试开关
 	Scheduler *Scheduler `json:"scheduler"`
 	Data      *Data      `json:"data"`
 	Wencai    *Wencai    `json:"wencai"`
 	BaseInfo  *BaseInfo  `json:"baseinfo"`
+	ZtInfo    *ZtInfo    `json:"ztinfo"`
 }
 
 // Server is the server configuration
@@ -28,8 +29,9 @@ type Server_GRPC struct {
 
 // Scheduler is the scheduler configuration
 type Scheduler struct {
-	Stock      *SchedulerTask `json:"stock"`       // 股票涨停数据任务
-	BaseInfo   *SchedulerTask `json:"base_info"`   // 基础数据任务
+	Stock      *SchedulerTask `json:"stock"`        // 股票涨停数据任务
+	BaseInfo   *SchedulerTask `json:"base_info"`    // 基础数据任务
+	ZtInfo     *SchedulerTask `json:"zt_info"`      // 涨停数据任务
 	RunOnStart bool           `json:"run_on_start"` // 启动时立即执行
 }
 
@@ -57,6 +59,12 @@ type Wencai struct {
 
 // BaseInfo is the base info API configuration
 type BaseInfo struct {
+	Query  string `json:"query"`
+	Cookie string `json:"cookie"`
+}
+
+// ZtInfo is the zt info API configuration
+type ZtInfo struct {
 	Query  string `json:"query"`
 	Cookie string `json:"cookie"`
 }

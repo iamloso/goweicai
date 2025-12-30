@@ -15,6 +15,7 @@ type CronScheduler struct {
 	cron        *cron.Cron
 	wencaiSvc   *service.WencaiService
 	baseInfoSvc *service.BaseInfoService
+	ztInfoSvc   *service.ZtInfoService
 	config      *conf.Scheduler
 	log         *log.Helper
 }
@@ -23,6 +24,7 @@ type CronScheduler struct {
 func NewCronScheduler(
 	wencaiSvc *service.WencaiService,
 	baseInfoSvc *service.BaseInfoService,
+	ztInfoSvc *service.ZtInfoService,
 	c *conf.Scheduler,
 	logger log.Logger,
 ) *CronScheduler {
@@ -32,6 +34,7 @@ func NewCronScheduler(
 		cron:        cron.New(cron.WithSeconds()), // 支持秒级别的 cron 表达式
 		wencaiSvc:   wencaiSvc,
 		baseInfoSvc: baseInfoSvc,
+		ztInfoSvc:   ztInfoSvc,
 		config:      c,
 		log:         helper,
 	}
@@ -58,6 +61,16 @@ func (s *CronScheduler) Start() error {
 			s.log.Errorf("基础数据定时任务执行失败: %v", err)
 		} else {
 			s.log.Info("基础数据定时任务执行成功")
+		}
+	}
+
+	// 定义涨停数据任务函数
+	ztInfoJob := func() {
+		s.log.Info("开始执行涨停数据定时任务...")
+		if err := s.ztInfoSvc.FetchAndSaveZtInfo(ctx); err != nil {
+			s.log.Errorf("涨停数据定时任务执行失败: %v", err)
+		} else {
+			s.log.Info("涨停数据定时任务执行成功")
 		}
 	}
 
@@ -93,18 +106,39 @@ func (s *CronScheduler) Start() error {
 		s.log.Info("基础数据定时任务已禁用")
 	}
 
+	// 添加涨停数据定时任务
+	if s.config.ZtInfo != nil && s.config.ZtInfo.Enabled {
+		cronExpr := s.config.ZtInfo.Cron
+		if cronExpr == "" {
+			cronExpr = "0 */1 * * * *" // 默认每分钟执行一次（秒 分 时 日 月 周）
+		}
+
+		if _, err := s.cron.AddFunc(cronExpr, ztInfoJob); err != nil {
+			s.log.Errorf("添加涨停数据定时任务失败: %v", err)
+			return err
+		}
+		s.log.Infof("涨停数据定时任务已配置，Cron 表达式: %s", cronExpr)
+	} else {
+		s.log.Info("涨停数据定时任务已禁用")
+	}
+
 	// 如果配置了启动时立即执行
 	if s.config.RunOnStart {
 		s.log.Info("启动时立即执行一次任务...")
-		
+
 		// 只执行已启用的任务
 		if s.config.Stock != nil && s.config.Stock.Enabled {
 			go stockJob()
 			time.Sleep(2 * time.Second) // 等待2秒，避免请求过于密集
 		}
-		
+
 		if s.config.BaseInfo != nil && s.config.BaseInfo.Enabled {
 			go baseInfoJob()
+			time.Sleep(2 * time.Second) // 等待2秒
+		}
+
+		if s.config.ZtInfo != nil && s.config.ZtInfo.Enabled {
+			go ztInfoJob()
 		}
 	}
 

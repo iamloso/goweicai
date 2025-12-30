@@ -68,14 +68,17 @@ func main() {
 	// 初始化仓库
 	stockRepo := data.NewStockRepo(d, logger)
 	baseInfoRepo := data.NewBaseInfoRepo(d, logger)
+	ztInfoRepo := data.NewZtInfoRepo(d, logger)
 
 	// 初始化业务层
 	stockUc := biz.NewStockUsecase(stockRepo)
 	baseInfoUc := biz.NewBaseInfoUsecase(baseInfoRepo)
+	ztInfoUc := biz.NewZtInfoUsecase(ztInfoRepo)
 
 	// 初始化服务层
 	wencaiSvc := service.NewWencaiService(stockUc, bc.Wencai, logger)
 	baseInfoSvc := service.NewBaseInfoService(baseInfoUc, bc.BaseInfo, &bc, logger)
+	ztInfoSvc := service.NewZtInfoService(ztInfoUc, bc.ZtInfo, &bc, logger)
 	httpSvc := service.NewHTTPService(stockUc, logger)
 	grpcSvc := service.NewGRPCService(stockUc, wencaiSvc, logger)
 
@@ -99,7 +102,7 @@ func main() {
 	}()
 
 	// 创建定时任务调度器
-	cronScheduler := NewCronScheduler(wencaiSvc, baseInfoSvc, bc.Scheduler, logger)
+	cronScheduler := NewCronScheduler(wencaiSvc, baseInfoSvc, ztInfoSvc, bc.Scheduler, logger)
 	if err := cronScheduler.Start(); err != nil {
 		helper.Fatalf("启动定时任务调度器失败: %v", err)
 	}
