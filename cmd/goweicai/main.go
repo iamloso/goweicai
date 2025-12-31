@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/iamloso/goweicai/cmd/goweicai/task"
 	"github.com/iamloso/goweicai/internal/biz"
 	"github.com/iamloso/goweicai/internal/conf"
 	"github.com/iamloso/goweicai/internal/data"
@@ -102,8 +103,8 @@ func main() {
 	}()
 
 	// 创建定时任务调度器
-	cronScheduler := NewCronScheduler(wencaiSvc, baseInfoSvc, ztInfoSvc, bc.Scheduler, logger)
-	if err := cronScheduler.Start(); err != nil {
+	scheduler := task.NewScheduler(wencaiSvc, baseInfoSvc, ztInfoSvc, bc.Scheduler, logger)
+	if err := scheduler.Start(); err != nil {
 		helper.Fatalf("启动定时任务调度器失败: %v", err)
 	}
 
@@ -115,7 +116,7 @@ func main() {
 	helper.Info("收到退出信号，正在关闭...")
 
 	// 优雅关闭所有服务
-	cronScheduler.Stop()
+	scheduler.Stop()
 	grpcServer.Stop()
 	if err := httpServer.Stop(); err != nil {
 		helper.Errorf("HTTP 服务器关闭错误: %v", err)
