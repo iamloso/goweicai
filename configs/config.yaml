@@ -12,11 +12,11 @@ debug: true  # 是否打印查询结果调试信息
 scheduler:
   # 股票涨停数据定时任务
   stock:
-    enabled: false             # 是否启用
+    enabled: true             # 是否启用
     cron: "0 */5 9-16 * * 1-5"  # 交易日 9:16-15:16 每5分钟执行
   # 基础数据定时任务
   base_info:
-    enabled: true              # 是否启用
+    enabled: true        # 是否启用
     cron: "0 */5 9-16 * * 1-5"  # 交易日 9:16-15:16 每5分钟执行
   # 涨停数据定时任务
   zt_info:
